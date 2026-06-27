@@ -22,7 +22,7 @@ pipeline {
 
         stage ('2. Git Checkout') {
             steps {
-                dir ("Devops_Project_CICD_EndtoEnd_Github") {
+                dir (""Devops_Project_CICD_EndtoEnd_Github/Application"") {
                     script {
                         git branch: 'main', url: 'https://github.com/roytrisha95-ui/Devops_Project_CICD_EndtoEnd_Github.git'
                     }
@@ -32,7 +32,7 @@ pipeline {
         
         stage("3. Maven Unit Test") {  
             steps{
-                dir ("Devops_Project_CICD_EndtoEnd_Github") {
+                dir (""Devops_Project_CICD_EndtoEnd_Github/Application"") {
                     sh 'mvn test'
                 }
             }
@@ -40,7 +40,7 @@ pipeline {
 
         stage('4. Maven Build') {
             steps{
-                dir ("Devops_Project_CICD_EndtoEnd_Github") {
+                dir (""Devops_Project_CICD_EndtoEnd_Github/Application"") {
                     sh 'mvn clean install'
                 }
             }
@@ -48,7 +48,7 @@ pipeline {
 
         stage("5. Maven Integration Test") {
             steps{
-                dir ("Devops_Project_CICD_EndtoEnd_Github") {
+                dir (""Devops_Project_CICD_EndtoEnd_Github/Application"") {
                     sh 'mvn verify'
                 }
             }
@@ -56,7 +56,7 @@ pipeline {
 
         stage('6. Docker Image Build') {
             steps{
-                dir('Devops_Project_CICD_EndtoEnd_Github') {
+                dir('"Devops_Project_CICD_EndtoEnd_Github/Application"') {
                     script {
                         def JOB = env.JOB_NAME.toLowerCase()
                         sh "docker build -t ${JOB}:${BUILD_NUMBER} ."
@@ -67,7 +67,7 @@ pipeline {
         
         stage('7. Docker Image Tag') {
             steps{
-                dir('Devops_Project_CICD_EndtoEnd_Github') {
+                dir('"Devops_Project_CICD_EndtoEnd_Github/Application"') {
                     script {
                         def JOB = env.JOB_NAME.toLowerCase()
 
