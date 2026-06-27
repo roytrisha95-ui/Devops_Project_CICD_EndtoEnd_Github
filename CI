@@ -1,0 +1,113 @@
+// JENKINS CI PIPELINE/
+// Purpose: The Code will be built into executable file (.jar) & pushed to Dockerhub
+// NOTE:
+//  i. Store Dockerhub, EC2 pem key credentials in Jenkins Server
+// ii. Install 'ssh agent' plugin in Jenkins
+
+pipeline {
+    agent any
+
+    // DECLARE THE VARIABLES HERE:
+    environment {
+        DOCKER_USERNAME = "trisha97398"
+    }
+
+    stages {
+
+        stage("1. Cleanup") {
+            steps {
+                deleteDir()
+            }
+        }
+
+        stage ('2. Git Checkout') {
+            steps {
+                dir ("Devops_Project_CICD_EndtoEnd_Github") {
+                    script {
+                        git branch: 'main', url: 'https://github.com/roytrisha95-ui/Devops_Project_CICD_EndtoEnd_Github.git'
+                    }
+                }
+            }
+        }   
+        
+        stage("3. Maven Unit Test") {  
+            steps{
+                dir ("Devops_Project_CICD_EndtoEnd_Github") {
+                    sh 'mvn test'
+                }
+            }
+        }
+
+        stage('4. Maven Build') {
+            steps{
+                dir ("Devops_Project_CICD_EndtoEnd_Github") {
+                    sh 'mvn clean install'
+                }
+            }
+        }
+
+        stage("5. Maven Integration Test") {
+            steps{
+                dir ("Devops_Project_CICD_EndtoEnd_Github") {
+                    sh 'mvn verify'
+                }
+            }
+        }
+
+        stage('6. Docker Image Build') {
+            steps{
+                dir('Devops_Project_CICD_EndtoEnd_Github') {
+                    script {
+                        def JOB = env.JOB_NAME.toLowerCase()
+                        sh "docker build -t ${JOB}:${BUILD_NUMBER} ."
+                    }
+                }
+            }
+        }
+        
+        stage('7. Docker Image Tag') {
+            steps{
+                dir('Devops_Project_CICD_EndtoEnd_Github') {
+                    script {
+                        def JOB = env.JOB_NAME.toLowerCase()
+
+                        sh "docker tag ${JOB}:${BUILD_NUMBER} ${DOCKER_USERNAME}/${JOB}:v${BUILD_NUMBER}"
+                        sh "docker tag ${JOB}:${BUILD_NUMBER} ${DOCKER_USERNAME}/${JOB}:latest"
+                    }
+                }
+            } 
+        }
+
+        stage('8. Trivy Image Scan') {
+            steps{
+                script { 
+                    def JOB = env.JOB_NAME.toLowerCase()
+                    sh "trivy image ${DOCKER_USERNAME}/${JOB}:v${BUILD_NUMBER} > scan.txt"
+                }
+            }
+        }
+
+        stage('9. Docker Image Push') {
+            steps{
+                script { 
+                    withCredentials([usernamePassword(credentialsId: 'my_dockerhub_creds', usernameVariable: 'docker_user', passwordVariable: 'docker_pass')]) {
+                        sh "docker login -u '${docker_user}' -p '${docker_pass}'"
+                        
+                        def JOB = env.JOB_NAME.toLowerCase()
+
+                        sh "docker push ${DOCKER_USERNAME}/${JOB}:v${BUILD_NUMBER}"
+                        sh "docker push ${DOCKER_USERNAME}/${JOB}:latest"
+                    }
+                }
+            }
+        }
+
+        stage('10. Docker Image Cleanup') {
+            steps{
+                script { 
+                    sh "docker image prune -af"
+                }
+            }
+        }
+    }
+}
