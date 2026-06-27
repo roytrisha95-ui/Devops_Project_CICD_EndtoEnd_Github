@@ -1,15 +1,13 @@
-# Terraform
-**/.terraform/
+# Private keys
+*.pem
+
+# Terraform state files
 *.tfstate
 *.tfstate.*
-crash.log
 
-# Sensitive files
-*.pem
-*.key
+# Terraform working directory
+.terraform/
 
-# VS Code
-.vscode/
-
-# Logs
-*.log
+# Terraform variables
+*.tfvars
+*.tfvars.json
